@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #09090b, #18181b 40%, #09090b);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .topbar, .panel {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 24px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+    }
+
+    .topbar {
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.4em;
+      color: #a1a1aa;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 56px;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: #d4d4d8;
+      font-size: 18px;
+    }
+
+    .small {
+      margin-top: 8px;
+      color: #a1a1aa;
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .mode-btn.active {
+      background: rgba(16,185,129,0.18);
+      border-color: rgba(16,185,129,0.45);
+    }
+
+    .tries {
+      padding: 14px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(16,185,129,0.35);
+      background: rgba(16,185,129,0.12);
+      min-width: 108px;
+    }
+
+    .tries span {
+      display: block;
+      color: #d4d4d8;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .tries strong {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover, .mode-btn:hover { background: rgba(255,255,255,0.14); }
+    .btn.white {
+      background: #fff;
+      color: #111827;
+      border-color: #fff;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .boards-panel {
+      padding: 18px;
+    }
+
+    .boards-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .boards-grid.mode-1 { grid-template-columns: 1fr; }
+    .boards-grid.mode-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .boards-grid.mode-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .board-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 14px;
+    }
+
+    .board-card.solved {
+      border-color: rgba(16,185,129,0.4);
+      background: rgba(16,185,129,0.08);
+    }
+
+    .board-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #d4d4d8;
+    }
+
+    .board {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .tile {
+      height: 64px;
+      border-radius: 18px;
+      border: 2px solid #3f3f46;
+      background: #27272a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 900;
+      text-transform: uppercase;
+      user-select: none;
+      transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .tile.empty {
+      background: rgba(24,24,27,0.8);
+      color: #fff;
+      border-color: #3f3f46;
+    }
+
+    .tile.correct { background: #10b981; border-color: #10b981; }
+    .tile.present { background: #f59e0b; border-color: #f59e0b; }
+    .tile.absent { background: #52525b; border-color: #52525b; }
+
+    .message {
+      margin-top: 16px;
+      min-height: 66px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .right-col {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel { padding: 18px 20px; }
+    .panel h2, .panel h3 { margin: 0 0 12px; }
+    .panel p { margin: 10px 0; color: #e4e4e7; line-height: 1.5; }
+
+    .kbd { display: grid; gap: 10px; }
+    .kbd-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+    .key {
+      min-width: 46px;
+      height: 52px;
+      padding: 0 12px;
+      border-radius: 16px;
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .key.wide { min-width: 86px; }
+    .key.correct { background: #10b981; border-color: #10b981; }
+    .key.present { background: #f59e0b; border-color: #f59e0b; }
+    .key.absent { background: #52525b; border-color: #52525b; }
+
+    .end-box {
+      border: 1px solid rgba(245,158,11,0.35);
+      background: rgba(245,158,11,0.12);
+    }
+
+    .end-box.win {
+      border-color: rgba(16,185,129,0.35);
+      background: rgba(16,185,129,0.12);
+    }
+
+    .shake { animation: shake 0.35s ease; }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+      100% { transform: translateX(0); }
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .right-col { order: 2; }
+    }
+
+    @media (max-width: 900px) {
+      .boards-grid.mode-2,
+      .boards-grid.mode-4 { grid-template-columns: 1fr; }
+      h1 { font-size: 42px; }
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .top-actions { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Jogo de palavras</div>
+        <h1>Termo</h1>
+        <p class="subtitle">Jogue no modo normal, Dueto ou Quarteto.</p>
+        <div class="small" id="dictionaryInfo"></div>
+      </div>
+
+      <div class="top-actions">
+        <div class="mode-switch">
+          <button class="mode-btn active" data-mode="1">Normal</button>
+          <button class="mode-btn" data-mode="2">Dueto</button>
+          <button class="mode-btn" data-mode="4">Quarteto</button>
+        </div>
+        <div class="tries">
+          <span>Tentativas</span>
+          <strong id="triesCount">0/6</strong>
+        </div>
+        <button class="btn" id="resetBtn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel boards-panel">
+        <div class="boards-grid mode-1" id="boardsGrid"></div>
+        <div class="message" id="message">Adivinhe a palavra de 5 letras.</div>
+      </div>
+
+      <div class="right-col">
+        <div class="panel">
+          <h2>Como funciona</h2>
+          <p><strong>Normal</strong>: uma palavra secreta.</p>
+          <p><strong>Dueto</strong>: duas palavras ao mesmo tempo.</p>
+          <p><strong>Quarteto</strong>: quatro palavras ao mesmo tempo.</p>
+          <p>A mesma tentativa é enviada para todos os tabuleiros ativos.</p>
+        </div>
+
+        <div class="panel">
+          <div class="kbd" id="keyboard"></div>
+        </div>
+
+        <div class="panel end-box" id="endBox" style="display:none;">
+          <h3 id="endTitle">Rodada encerrada</h3>
+          <p id="endText"></p>
+          <button class="btn white" id="playAgainBtn">Jogar novamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WORDS = [
+      "PODAM","TRENS","FUZIL","FURIA","TEMOS","ABRIR","ACESO","ADEUS","ADIAR","AFETO",
+      "AGORA","AGUDO","AJUDA","ALBUM","ALIAS","ALIAR","ALTAR","ALUNO","AMADO","AMIGO",
+      "AMORA","ANDAR","ANEIS","ANEXO","ANTES","ANZOL","APICE","APOIO","ARADO","AREIA",
+      "ARENA","AROMA","ARROZ","ARTES","ASSIM","ASTRO","ATIVO","ATRAS","ATUAR","AUDIO",
+      "AVIAO","AVISO","AZUIS","BAILE","BAIXO","BALAO","BALDE","BANCO","BANDO","BARBA",
+      "BARCO","BARRO","BASTA","BEIJO","BELGA","BICHO","BINGO","BISCO","BLUSA","BOLHA",
+      "BOLSA","BOMBA","BONDE","BORDA","BOTAO","BRASA","BRAVO","BREJO","BRIGA","BRISA",
+      "BROTA","BRUTO","CABER","CABRA","CACAU","CAIXA","CALAR","CALCA","CALDO","CALMA",
+      "CALOR","CAMPO","CANAL","CANTO","CAPAZ","CAPIM","CARNE","CARRO","CARTA","CASAL",
+      "CASAS","CASTA","CATAR","CAUSA","CEDRO","CEGAR","CESTA","CHATA","CHAVE","CHEFE",
+      "CHEIO","CHUVA","CICLO","CIDRA","CINTO","CLARA","CLARO","CLIMA","COBRA","COFRE",
+      "COISA","COLAR","COMER","COMUM","CONTA","COPIA","CORAL","CORDA","CORPO","CORTE",
+      "COSTA","CRAVO","CREME","CRIME","CRISE","CRUEL","CULPA","CURAR","CURSO","CUSTO",
+      "DADOS","DANCA","DEDAL","DEIXA","DENSO","DENTE","DEPOR","DESCE","DEVER","DIZER",
+      "DOBRA","DOIDO","DORAR","DORME","DRAMA","DUCHA","EFEITO","EGITO","ELEVA","ELITE",
+      "ENFIM","ENTRA","ENVIO","ERGUE","ERROS","ESCOL","ESPIA","ESTAR","ETAPA","EXAME",
+      "EXATO","EXIGE","EXITO","FACIL","FALAR","FALTA","FARDA","FAROL","FARTA","FATOS",
+      "FAUNA","FAVOR","FAZER","FEBRE","FEIRA","FELIZ","FENDA","FERAS","FERRO","FESTA",
+      "FIBRA","FILHO","FILME","FINAL","FINCA","FIRME","FISCO","FLUIR","FOCAR","FOGAO",
+      "FOLGA","FOLHA","FONTE","FORCA","FORMA","FORNO","FORTE","FOSSO","FRASE","FREIO",
+      "FRUTA","FUGIR","FUNDO","FURAR","FUSCA","GALHO","GANHO","GAROA","GARRA","GASTO",
+      "GELAR","GERAL","GERAR","GIRAR","GLOBO","GOLPE","GOSTO","GRAMA","GRANA","GRATO",
+      "GRAVE","GREVE","GRITO","GRUPO","HEROI","HOTEL","HUMOR","IDEAL","IDOSO","IGUAL",
+      "ILESO","IMPAR","IMUNE","INDIO","INICIO","IRMAO","JANTA","JARRA","JEITO","JOGAR",
+      "JOVEM","JUNTO","JURAR","LABIO","LABOR","LACRE","LAGOA","LANCE","LARGO","LASER",
+      "LAVAR","LAZER","LEGAL","LEIGO","LEITE","LEITO","LENTO","LETRA","LEVAR","LIBRA",
+      "LIDER","LIGAR","LIMAO","LIMBO","LIMPO","LINDA","LIVRE","LIVRO","LOCAL","LONGE",
+      "LOTAR","LOUCA","LUCRO","LUGAR","LUNAR","LUTAR","MACIO","MAGIA","MAGOA","MAIOR",
+      "MALHA","MAMAE","MANGA","MANSO","MARCO","MASSA","MATAR","MEDIR","MEIGA","MELAO",
+      "MENOR","MENTE","MESMO","METAL","METRO","MIADO","MINHA","MISTO","MITOS","MODEM",
+      "MOEDA","MOLDE","MOLHO","MONTE","MORAL","MORAR","MORRO","MORTA","MOSCA","MOTOR",
+      "MOVER","MUNDO","MURAL","MUSGO","NADAR","NARIZ","NAVIO","NEGAR","NELAS","NENEM",
+      "NEVAR","NINHO","NIVEL","NOBRE","NOITE","NOMES","NORTE","NOSSO","NOTAR","NOVOS",
+      "NUVEM","OASIS","OBESO","OBRAS","OCASO","OCUPA","ODIAR","OESTE","OLHAR","OMBRO",
+      "ONTEM","OPCAO","ORDEM","ORGAO","OUSAR","OUTRO","OUVIR","PACTO","PAGAR","PALCO",
+      "PALHA","PANOS","PARAR","PARTE","PASSA","PASSO","PASTA","PAUSA","PAVOR","PEDAL",
+      "PEDRA","PEIXE","PENAL","PENSA","PERTO","PESAR","PIADA","PISTA","PIVOT","PLACA",
+      "PLANO","POBRE","PODER","POEMA","POLIR","POMAR","PONTE","PORCA","PORTA","POSAR",
+      "PRAIA","PRATA","PRATO","PRAZO","PREGO","PRETO","PRIMO","PROSA","PROVA","PULAR",
+      "PULSO","PUNHO","QUASE","QUEDA","QUERO","QUINA","QUITA","RACAO","RADAR","RAIOS",
+      "RAMPA","RAPAZ","RASGO","REAGE","RECEM","REDES","REGRA","REINO","RELER","REPOR",
+      "RESTO","RETRO","REVER","REZAR","RIFLE","RIGOR","RIMAR","RISCO","RITMO","RIVAL",
+      "ROCHA","RODAR","ROLAR","ROMBO","RONCO","ROSTO","ROTAS","ROUPA","RUMOR","SABER",
+      "SABOR","SAGAZ","SAIDA","SALAO","SALTO","SANAR","SANTO","SAUDE","SEARA","SEGUE",
+      "SEIVA","SENHA","SENSO","SERAO","SERIE","SERVO","SETOR","SINAL","SINTO","SITIO",
+      "SOBRA","SOCIO","SOLAR","SOLTO","SONHO","SONSO","SORTE","SUAVE","SUBIR","SUECO",
+      "SULCO","SURDO","TABUA","TACAR","TALCO","TANGA","TANTO","TAPAR","TARDE","TATIL",
+      "TECLA","TELAO","TELHA","TEMPO","TENAZ","TENDA","TENIS","TERMO","TERRA","TESTE",
+      "TEXTO","TIGRE","TINTA","TIRAR","TITIO","TOCAR","TODOS","TOLDO","TOMAR","TONEL",
+      "TOPAR","TORNO","TORRE","TORTA","TOURO","TRAGO","TRAMA","TREMO","TREVO","TRIBO",
+      "TRIGO","TRONO","TROCA","TROCO","TROPA","TROTE","TUMOR","TUNEL","TURMA","UNIAO",
+      "UNICO","UNTAR","URGIR","USADO","VACAO","VADIO","VAGAR","VALER","VALSA","VALVA",
+      "VAPOR","VARAL","VAZIO","VEADO","VEDAR","VEIAS","VELHO","VENDA","VENTO","VERAO",
+      "VERBA","VERBO","VERDE","VERSO","VESTE","VETOR","VIBRA","VICIO","VIDRO","VIGIA",
+      "VIGOR","VILAO","VINCO","VINHO","VIOLA","VIRAR","VIRUS","VISAO","VISOR","VITAL",
+      "VIVER","VOCAL","VOLTA","VOTAR","XAMPU","XEROX","ZANGA","ZEBRA","ZELAR","ZONZO"
+    ];
+
+    const KEYBOARD_ROWS = [
+      ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+      ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+      ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "BACK"]
+    ];
+
+    const BASE_MAX_ROWS = 6;
+    const WORD_LENGTH = 5;
+
+    const boardsGridEl = document.getElementById("boardsGrid");
+    const keyboardEl = document.getElementById("keyboard");
+    const messageEl = document.getElementById("message");
+    const triesCountEl = document.getElementById("triesCount");
+    const dictionaryInfoEl = document.getElementById("dictionaryInfo");
+    const endBoxEl = document.getElementById("endBox");
+    const endTitleEl = document.getElementById("endTitle");
+    const endTextEl = document.getElementById("endText");
+    const resetBtn = document.getElementById("resetBtn");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const modeButtons = Array.from(document.querySelectorAll(".mode-btn"));
+
+    let mode = 1;
+    let answers = [];
+    let guesses = [];
+    let current = "";
+    let solvedBoards = [];
+    let gameOver = false;
+    let messageTimer = null;
+
+    dictionaryInfoEl.textContent = `Lista local com ${WORDS.length.toLocaleString("pt-BR")} palavras reais de 5 letras.`;
+
+    function getMaxRows() {
+      if (mode === 2) return BASE_MAX_ROWS + 2;
+      if (mode === 4) return BASE_MAX_ROWS + 3;
+      return BASE_MAX_ROWS;
+    }
+
+    function sampleAnswers(count) {
+      const pool = [...WORDS];
+      const selected = [];
+      while (selected.length < count && pool.length) {
+        const index = Math.floor(Math.random() * pool.length);
+        selected.push(pool.splice(index, 1)[0]);
+      }
+      return selected;
+    }
+
+    function getStatuses(guess, target) {
+      const result = Array(WORD_LENGTH).fill("absent");
+      const targetArr = target.split("");
+      const guessArr = guess.split("");
+      const used = Array(WORD_LENGTH).fill(false);
+
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (guessArr[i] === targetArr[i]) {
+          result[i] = "correct";
+          used[i] = true;
+        }
+      }
+
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (result[i] === "correct") continue;
+        for (let j = 0; j < WORD_LENGTH; j++) {
+          if (!used[j] && guessArr[i] === targetArr[j]) {
+            result[i] = "present";
+            used[j] = true;
+            break;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    function getKeyStatuses() {
+      const map = {};
+      guesses.forEach((guess) => {
+        answers.forEach((answer) => {
+          const statuses = getStatuses(guess, answer);
+          guess.split("").forEach((letter, index) => {
+            const next = statuses[index];
+            const prev = map[letter];
+            if (prev === "correct") return;
+            if (prev === "present" && next === "absent") return;
+            map[letter] = next;
+          });
+        });
+      });
+      return map;
+    }
+
+    function showMessage(text, sticky) {
+      messageEl.textContent = text;
+      clearTimeout(messageTimer);
+      if (!sticky) {
+        messageTimer = setTimeout(() => {
+          if (!gameOver) messageEl.textContent = mode === 1 ? "Adivinhe a palavra de 5 letras." : `Adivinhe as ${mode} palavras de 5 letras.`;
+        }, 1600);
+      }
+    }
+
+    function shakeCurrentRow() {
+      document.querySelectorAll(`.row.row-${guesses.length}`).forEach((row) => {
+        row.classList.remove("shake");
+        void row.offsetWidth;
+        row.classList.add("shake");
+      });
+    }
+
+    function renderBoards() {
+      boardsGridEl.className = `boards-grid mode-${mode}`;
+      boardsGridEl.innerHTML = "";
+
+      answers.forEach((answer, boardIndex) => {
+        const card = document.createElement("div");
+        card.className = `board-card${solvedBoards[boardIndex] ? " solved" : ""}`;
+
+        const title = document.createElement("h3");
+        title.className = "board-title";
+        title.textContent = mode === 1 ? "Tabuleiro" : `Tabuleiro ${boardIndex + 1}`;
+        card.appendChild(title);
+
+        const board = document.createElement("div");
+        board.className = "board";
+
+        for (let rowIndex = 0; rowIndex < getMaxRows(); rowIndex++) {
+          const rowEl = document.createElement("div");
+          rowEl.className = `row row-${rowIndex}`;
+
+          let word = "";
+          let statuses = Array(WORD_LENGTH).fill("empty");
+
+          if (rowIndex < guesses.length) {
+            word = guesses[rowIndex];
+            statuses = getStatuses(word, answer);
+          } else if (rowIndex === guesses.length && !gameOver) {
+            word = current.padEnd(WORD_LENGTH, " ");
+          } else {
+            word = " ".repeat(WORD_LENGTH);
+          }
+
+          word.split("").forEach((char, i) => {
+            const tile = document.createElement("div");
+            tile.className = `tile ${statuses[i]}`;
+            tile.textContent = char.trim();
+            rowEl.appendChild(tile);
+          });
+
+          board.appendChild(rowEl);
+        }
+
+        card.appendChild(board);
+        boardsGridEl.appendChild(card);
+      });
+
+      triesCountEl.textContent = `${guesses.length}/${getMaxRows()}`;
+    }
+
+    function renderKeyboard() {
+      keyboardEl.innerHTML = "";
+      const keyStatuses = getKeyStatuses();
+
+      KEYBOARD_ROWS.forEach((row) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "kbd-row";
+
+        row.forEach((key) => {
+          const btn = document.createElement("button");
+          btn.className = "key";
+          if (key === "ENTER" || key === "BACK") btn.classList.add("wide");
+          if (keyStatuses[key]) btn.classList.add(keyStatuses[key]);
+          btn.textContent = key === "BACK" ? "⌫" : key;
+          btn.addEventListener("click", () => handleKey(key));
+          rowEl.appendChild(btn);
+        });
+
+        keyboardEl.appendChild(rowEl);
+      });
+    }
+
+    function updateEndBox() {
+      if (!gameOver) {
+        endBoxEl.style.display = "none";
+        endBoxEl.classList.remove("win");
+        return;
+      }
+
+      const won = solvedBoards.every(Boolean);
+      endBoxEl.style.display = "block";
+      endBoxEl.classList.toggle("win", won);
+      endTitleEl.textContent = won ? "Você venceu" : "Rodada encerrada";
+      endTextEl.textContent = mode === 1
+        ? `Palavra secreta: ${answers[0]}`
+        : `Palavras secretas: ${answers.join(", ")}`;
+    }
+
+    function render() {
+      renderBoards();
+      renderKeyboard();
+      updateEndBox();
+    }
+
+    function updateSolvedBoards(guess) {
+      answers.forEach((answer, index) => {
+        if (guess === answer) solvedBoards[index] = true;
+      });
+    }
+
+    function submitGuess() {
+      if (gameOver) return;
+
+      if (current.length !== WORD_LENGTH) {
+        shakeCurrentRow();
+        showMessage("Digite uma palavra com 5 letras.");
+        return;
+      }
+
+      if (!WORDS.includes(current)) {
+        shakeCurrentRow();
+        showMessage("Palavra não está na lista.");
+        return;
+      }
+
+      guesses.push(current);
+      updateSolvedBoards(current);
+
+      const allSolved = solvedBoards.every(Boolean);
+      if (allSolved) {
+        gameOver = true;
+        showMessage(mode === 1 ? "Boa! Você acertou." : `Boa! Você acertou as ${mode} palavras.`, true);
+      } else if (guesses.length >= getMaxRows()) {
+        gameOver = true;
+        showMessage(mode === 1 ? `Fim de jogo. A palavra era ${answers[0]}.` : `Fim de jogo. As palavras eram ${answers.join(", ")}.`, true);
+      } else {
+        showMessage(mode === 1 ? "Tentativa registrada." : "Tentativa enviada para todos os tabuleiros.");
+      }
+
+      current = "";
+      render();
+    }
+
+    function handleKey(key) {
+      if (gameOver && key !== "ENTER") return;
+
+      if (key === "ENTER") {
+        if (gameOver) resetGame();
+        else submitGuess();
+        return;
+      }
+
+      if (key === "BACK") {
+        current = current.slice(0, -1);
+        render();
+        return;
+      }
+
+      if (/^[A-Z]$/.test(key) && current.length < WORD_LENGTH) {
+        current += key;
+        render();
+      }
+    }
+
+    function resetGame(nextMode = mode) {
+      mode = Number(nextMode);
+      answers = sampleAnswers(mode);
+      guesses = [];
+      current = "";
+      solvedBoards = Array(mode).fill(false);
+      gameOver = false;
+      modeButtons.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.mode) === mode));
+      showMessage(
+        mode === 1
+          ? "Novo jogo iniciado."
+          : `Novo jogo ${mode === 2 ? "Dueto" : "Quarteto"} iniciado com ${getMaxRows()} tentativas.`
+      );
+      render();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const key = e.key.toUpperCase();
+
+      if (key === "ENTER") {
+        e.preventDefault();
+        handleKey("ENTER");
+      } else if (key === "BACKSPACE") {
+        e.preventDefault();
+        handleKey("BACK");
+      } else if (/^[A-Z]$/.test(key)) {
+        e.preventDefault();
+        handleKey(key);
+      }
+    });
+
+    resetBtn.addEventListener("click", () => resetGame());
+    playAgainBtn.addEventListener("click", () => resetGame());
+    modeButtons.forEach((btn) => btn.addEventListener("click", () => resetGame(btn.dataset.mode)));
+
+    resetGame(1);
+  </script>
+</body>
+</html>
