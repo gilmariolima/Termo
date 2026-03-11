@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termo</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #7b6b73;
+      --top-line: #273548;
+      --text: #ffffff;
+      --tile-empty: rgba(109, 95, 103, 0.72);
+      --tile-empty-border: rgba(88, 76, 83, 0.9);
+      --key: #786b72;
+      --correct: #3aa655;
+      --present: #d3a13f;
+      --absent: #54484f;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 18px 18px;
+    }
+
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      border-top: 5px solid var(--top-line);
+      padding-top: 10px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .mode-switch,
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .top-actions {
+      justify-content: flex-end;
+    }
+
+    .brand {
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .mode-btn,
+    .btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.28);
+      background: transparent;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .boards-grid {
+      display: grid;
+      justify-content: center;
+      align-items: start;
+      gap: 22px 30px;
+      margin-bottom: 22px;
+    }
+
+    .boards-grid.mode-1 { grid-template-columns: 280px; }
+    .boards-grid.mode-2 { grid-template-columns: repeat(2, 280px); }
+    .boards-grid.mode-4 { grid-template-columns: repeat(4, 236px); gap: 18px 26px; }
+
+    .board-card {
+      width: 100%;
+    }
+
+    .board-title {
+      margin: 0 0 8px;
+      min-height: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .mode-1 .board-title {
+      visibility: hidden;
+    }
+
+    .board {
+      display: grid;
+      gap: 4px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+
+    .tile {
+      aspect-ratio: 1 / 1;
+      min-height: 48px;
+      border-radius: 4px;
+      border: 2px solid var(--tile-empty-border);
+      background: var(--tile-empty);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      user-select: none;
+      padding: 0;
+    }
+
+    .mode-4 .tile {
+      min-height: 42px;
+      font-size: 21px;
+    }
+
+    .tile.correct {
+      background: var(--correct);
+      border-color: var(--correct);
+    }
+
+    .tile.present {
+      background: var(--present);
+      border-color: var(--present);
+    }
+
+    .tile.absent {
+      background: var(--absent);
+      border-color: var(--absent);
+    }
+
+    .keyboard-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .kbd {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .kbd-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .kbd-row.row-2 {
+      padding-left: 22px;
+    }
+
+    .kbd-row.row-3 {
+      padding-left: 34px;
+    }
+
+    .key {
+      min-width: 58px;
+      height: 46px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--key);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+
+    .key.wide {
+      min-width: 112px;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+    }
+
+    .key.correct { background: var(--correct); }
+    .key.present { background: var(--present); }
+    .key.absent { background: var(--absent); }
+
+    .hidden-ui {
+      display: none !important;
+    }
+
+    .shake {
+      animation: shake 0.35s ease;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+      100% { transform: translateX(0); }
+    }
+
+    @media (max-width: 1120px) {
+      .boards-grid.mode-4 {
+        grid-template-columns: repeat(2, 236px);
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 0 10px 14px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .brand {
+        order: -1;
+      }
+
+      .mode-switch,
+      .top-actions {
+        justify-content: center;
+      }
+
+      .boards-grid.mode-1,
+      .boards-grid.mode-2,
+      .boards-grid.mode-4 {
+        grid-template-columns: 1fr;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .boards-grid.mode-4 {
+        max-width: 236px;
+      }
+
+      .kbd-row.row-2 {
+        padding-left: 16px;
+      }
+
+      .kbd-row.row-3 {
+        padding-left: 24px;
+      }
+
+      .key {
+        min-width: 32px;
+        height: 40px;
+        font-size: 15px;
+        padding: 0 6px;
+      }
+
+      .key.wide {
+        min-width: 76px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="mode-switch">
+        <button class="mode-btn active" data-mode="1">Normal</button>
+        <button class="mode-btn" data-mode="2">Dueto</button>
+        <button class="mode-btn" data-mode="4">Quarteto</button>
+      </div>
+
+      <div class="brand">
+        <h1 id="titleLabel">TERMO</h1>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" id="resetBtn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div class="boards-grid mode-1" id="boardsGrid"></div>
+
+    <div class="keyboard-wrap">
+      <div class="kbd" id="keyboard"></div>
+    </div>
+
+    <div class="hidden-ui">
+      <div id="message"></div>
+      <div id="triesCount"></div>
+      <div id="dictionaryInfo"></div>
+      <div id="endBox"></div>
+      <div id="endTitle"></div>
+      <div id="endText"></div>
+      <button id="playAgainBtn"></button>
+    </div>
+  </div>
+
+  <script>
+    const WORDS = [
+      "PODAM","TRENS","FUZIL","FURIA","TEMOS","ABRIR","ACESO","ADEUS","ADIAR","AFETO",
+      "AGORA","AGUDO","AJUDA","ALBUM","ALIAS","ALIAR","ALTAR","ALUNO","AMADO","AMIGO",
+      "AMORA","ANDAR","ANEIS","ANEXO","ANTES","ANZOL","APICE","APOIO","ARADO","AREIA",
+      "ARENA","AROMA","ARROZ","ARTES","ASSIM","ASTRO","ATIVO","ATRAS","ATUAR","AUDIO",
+      "AVIAO","AVISO","AZUIS","BAILE","BAIXO","BALAO","BALDE","BANCO","BANDO","BARBA",
+      "BARCO","BARRO","BASTA","BEIJO","BELGA","BICHO","BINGO","BISCO","BLUSA","BOLHA",
+      "BOLSA","BOMBA","BONDE","BORDA","BOTAO","BRASA","BRAVO","BREJO","BRIGA","BRISA",
+      "BROTA","BRUTO","CABER","CABRA","CACAU","CAIXA","CALAR","CALCA","CALDO","CALMA",
+      "CALOR","CAMPO","CANAL","CANTO","CAPAZ","CAPIM","CARNE","CARRO","CARTA","CASAL",
+      "CASAS","CASTA","CATAR","CAUSA","CEDRO","CEGAR","CESTA","CHATA","CHAVE","CHEFE",
+      "CHEIO","CHUVA","CICLO","CIDRA","CINTO","CLARA","CLARO","CLIMA","COBRA","COFRE",
+      "COISA","COLAR","COMER","COMUM","CONTA","COPIA","CORAL","CORDA","CORPO","CORTE",
+      "COSTA","CRAVO","CREME","CRIME","CRISE","CRUEL","CULPA","CURAR","CURSO","CUSTO",
+      "DADOS","DANCA","DEDAL","DEIXA","DENSO","DENTE","DEPOR","DESCE","DEVER","DIZER",
+      "DOBRA","DOIDO","DORAR","DORME","DRAMA","DUCHA","EFEITO","EGITO","ELEVA","ELITE",
+      "ENFIM","ENTRA","ENVIO","ERGUE","ERROS","ESCOL","ESPIA","ESTAR","ETAPA","EXAME",
+      "EXATO","EXIGE","EXITO","FACIL","FALAR","FALTA","FARDA","FAROL","FARTA","FATOS",
+      "FAUNA","FAVOR","FAZER","FEBRE","FEIRA","FELIZ","FENDA","FERAS","FERRO","FESTA",
+      "FIBRA","FILHO","FILME","FINAL","FINCA","FIRME","FISCO","FLUIR","FOCAR","FOGAO",
+      "FOLGA","FOLHA","FONTE","FORCA","FORMA","FORNO","FORTE","FOSSO","FRASE","FREIO",
+      "FRUTA","FUGIR","FUNDO","FURAR","FUSCA","GALHO","GANHO","GAROA","GARRA","GASTO",
+      "GELAR","GERAL","GERAR","GIRAR","GLOBO","GOLPE","GOSTO","GRAMA","GRANA","GRATO",
+      "GRAVE","GREVE","GRITO","GRUPO","HEROI","HOTEL","HUMOR","IDEAL","IDOSO","IGUAL",
+      "ILESO","IMPAR","IMUNE","INDIO","INICIO","IRMAO","JANTA","JARRA","JEITO","JOGAR",
+      "JOVEM","JUNTO","JURAR","LABIO","LABOR","LACRE","LAGOA","LANCE","LARGO","LASER",
+      "LAVAR","LAZER","LEGAL","LEIGO","LEITE","LEITO","LENTO","LETRA","LEVAR","LIBRA",
+      "LIDER","LIGAR","LIMAO","LIMBO","LIMPO","LINDA","LIVRE","LIVRO","LOCAL","LONGE",
+      "LOTAR","LOUCA","LUCRO","LUGAR","LUNAR","LUTAR","MACIO","MAGIA","MAGOA","MAIOR",
+      "MALHA","MAMAE","MANGA","MANSO","MARCO","MASSA","MATAR","MEDIR","MEIGA","MELAO",
+      "MENOR","MENTE","MESMO","METAL","METRO","MIADO","MINHA","MISTO","MITOS","MODEM",
+      "MOEDA","MOLDE","MOLHO","MONTE","MORAL","MORAR","MORRO","MORTA","MOSCA","MOTOR",
+      "MOVER","MUNDO","MURAL","MUSGO","NADAR","NARIZ","NAVIO","NEGAR","NELAS","NENEM",
+      "NEVAR","NINHO","NIVEL","NOBRE","NOITE","NOMES","NORTE","NOSSO","NOTAR","NOVOS",
+      "NUVEM","OASIS","OBESO","OBRAS","OCASO","OCUPA","ODIAR","OESTE","OLHAR","OMBRO",
+      "ONTEM","OPCAO","ORDEM","ORGAO","OUSAR","OUTRO","OUVIR","PACTO","PAGAR","PALCO",
+      "PALHA","PANOS","PARAR","PARTE","PASSA","PASSO","PASTA","PAUSA","PAVOR","PEDAL",
+      "PEDRA","PEIXE","PENAL","PENSA","PERTO","PESAR","PIADA","PISTA","PIVOT","PLACA",
+      "PLANO","POBRE","PODER","POEMA","POLIR","POMAR","PONTE","PORCA","PORTA","POSAR",
+      "PRAIA","PRATA","PRATO","PRAZO","PREGO","PRETO","PRIMO","PROSA","PROVA","PULAR",
+      "PULSO","PUNHO","QUASE","QUEDA","QUERO","QUINA","QUITA","RACAO","RADAR","RAIOS",
+      "RAMPA","RAPAZ","RASGO","REAGE","RECEM","REDES","REGRA","REINO","RELER","REPOR",
+      "RESTO","RETRO","REVER","REZAR","RIFLE","RIGOR","RIMAR","RISCO","RITMO","RIVAL",
+      "ROCHA","RODAR","ROLAR","ROMBO","RONCO","ROSTO","ROTAS","ROUPA","RUMOR","SABER",
+      "SABOR","SAGAZ","SAIDA","SALAO","SALTO","SANAR","SANTO","SAUDE","SEARA","SEGUE",
+      "SEIVA","SENHA","SENSO","SERAO","SERIE","SERVO","SETOR","SINAL","SINTO","SITIO",
+      "SOBRA","SOCIO","SOLAR","SOLTO","SONHO","SONSO","SORTE","SUAVE","SUBIR","SUECO",
+      "SULCO","SURDO","TABUA","TACAR","TALCO","TANGA","TANTO","TAPAR","TARDE","TATIL",
+      "TECLA","TELAO","TELHA","TEMPO","TENAZ","TENDA","TENIS","TERMO","TERRA","TESTE",
+      "TEXTO","TIGRE","TINTA","TIRAR","TITIO","TOCAR","TODOS","TOLDO","TOMAR","TONEL",
+      "TOPAR","TORNO","TORRE","TORTA","TOURO","TRAGO","TRAMA","TREMO","TREVO","TRIBO",
+      "TRIGO","TRONO","TROCA","TROCO","TROPA","TROTE","TUMOR","TUNEL","TURMA","UNIAO",
+      "UNICO","UNTAR","URGIR","USADO","VACAO","VADIO","VAGAR","VALER","VALSA","VALVA",
+      "VAPOR","VARAL","VAZIO","VEADO","VEDAR","VEIAS","VELHO","VENDA","VENTO","VERAO",
+      "VERBA","VERBO","VERDE","VERSO","VESTE","VETOR","VIBRA","VICIO","VIDRO","VIGIA",
+      "VIGOR","VILAO","VINCO","VINHO","VIOLA","VIRAR","VIRUS","VISAO","VISOR","VITAL",
+      "VIVER","VOCAL","VOLTA","VOTAR","XAMPU","XEROX","ZANGA","ZEBRA","ZELAR","ZONZO"
+    ];
+
+    const KEYBOARD_ROWS = [
+      ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+      ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+      ["Z", "X", "C", "V", "B", "N", "M", "ENTER", "BACK"]
+    ];
+
+    const BASE_MAX_ROWS = 6;
+    const WORD_LENGTH = 5;
+
+    const boardsGridEl = document.getElementById("boardsGrid");
+    const keyboardEl = document.getElementById("keyboard");
+    const messageEl = document.getElementById("message");
+    const triesCountEl = document.getElementById("triesCount");
+    const dictionaryInfoEl = document.getElementById("dictionaryInfo");
+    const endBoxEl = document.getElementById("endBox");
+    const endTitleEl = document.getElementById("endTitle");
+    const endTextEl = document.getElementById("endText");
+    const resetBtn = document.getElementById("resetBtn");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const modeButtons = Array.from(document.querySelectorAll(".mode-btn"));
+    const titleLabelEl = document.getElementById("titleLabel");
+
+    let mode = 1;
+    let answers = [];
+    let guesses = [];
+    let current = "";
+    let cursorIndex = 0;
+    let solvedBoards = [];
+    let gameOver = false;
+    let messageTimer = null;
+
+    function getMaxRows() {
+      if (mode === 2) return BASE_MAX_ROWS + 2;
+      if (mode === 4) return BASE_MAX_ROWS + 3;
+      return BASE_MAX_ROWS;
+    }
+
+    function sampleAnswers(count) {
+      const pool = [...WORDS];
+      const selected = [];
+      while (selected.length < count && pool.length) {
+        const index = Math.floor(Math.random() * pool.length);
+        selected.push(pool.splice(index, 1)[0]);
+      }
+      return selected;
+    }
+
+    function getStatuses(guess, target) {
+      const result = Array(WORD_LENGTH).fill("absent");
+      const targetArr = target.split("");
+      const guessArr = guess.split("");
+      const used = Array(WORD_LENGTH).fill(false);
+
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (guessArr[i] === targetArr[i]) {
+          result[i] = "correct";
+          used[i] = true;
+        }
+      }
+
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (result[i] === "correct") continue;
+        for (let j = 0; j < WORD_LENGTH; j++) {
+          if (!used[j] && guessArr[i] === targetArr[j]) {
+            result[i] = "present";
+            used[j] = true;
+            break;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    function getKeyStatuses() {
+      const map = {};
+      guesses.forEach((guess) => {
+        answers.forEach((answer) => {
+          const statuses = getStatuses(guess, answer);
+          guess.split("").forEach((letter, index) => {
+            const next = statuses[index];
+            const prev = map[letter];
+            if (prev === "correct") return;
+            if (prev === "present" && next === "absent") return;
+            map[letter] = next;
+          });
+        });
+      });
+      return map;
+    }
+
+    function showMessage(text, sticky) {
+      messageEl.textContent = text;
+      clearTimeout(messageTimer);
+      if (!sticky) {
+        messageTimer = setTimeout(() => {
+          if (!gameOver) messageEl.textContent = "";
+        }, 1600);
+      }
+    }
+
+    function shakeCurrentRow() {
+      document.querySelectorAll(`.row.row-${guesses.length}`).forEach((row) => {
+        row.classList.remove("shake");
+        void row.offsetWidth;
+        row.classList.add("shake");
+      });
+    }
+
+    function renderBoards() {
+      boardsGridEl.className = `boards-grid mode-${mode}`;
+      boardsGridEl.innerHTML = "";
+
+      answers.forEach((answer, boardIndex) => {
+        const card = document.createElement("div");
+        card.className = `board-card${solvedBoards[boardIndex] ? " solved" : ""}`;
+
+        const title = document.createElement("h3");
+        title.className = "board-title";
+        title.textContent = mode === 1 ? "Tabuleiro" : `Tabuleiro ${boardIndex + 1}`;
+        card.appendChild(title);
+
+        const board = document.createElement("div");
+        board.className = "board";
+
+        for (let rowIndex = 0; rowIndex < getMaxRows(); rowIndex++) {
+          const rowEl = document.createElement("div");
+          rowEl.className = `row row-${rowIndex}`;
+
+          let letters = Array(WORD_LENGTH).fill("");
+          let statuses = Array(WORD_LENGTH).fill("");
+          const isActiveRow = rowIndex === guesses.length && !gameOver;
+
+          if (rowIndex < guesses.length) {
+            letters = guesses[rowIndex].split("");
+            statuses = getStatuses(guesses[rowIndex], answer);
+          } else if (isActiveRow) {
+            letters = current.padEnd(WORD_LENGTH, " ").split("");
+          }
+
+          letters.forEach((char, i) => {
+            const tile = document.createElement("button");
+            tile.type = "button";
+            tile.className = `tile ${statuses[i] || ""}`;
+            tile.textContent = char.trim();
+
+            if (isActiveRow) {
+              tile.dataset.index = String(i);
+              tile.addEventListener("click", () => {
+                cursorIndex = i;
+                renderBoards();
+              });
+
+              if (i === cursorIndex) {
+                tile.style.outline = "3px solid rgba(255,255,255,0.9)";
+                tile.style.outlineOffset = "-3px";
+              }
+            } else {
+              tile.disabled = true;
+            }
+
+            rowEl.appendChild(tile);
+          });
+
+          board.appendChild(rowEl);
+        }
+
+        card.appendChild(board);
+        boardsGridEl.appendChild(card);
+      });
+
+      triesCountEl.textContent = `${guesses.length}/${getMaxRows()}`;
+    }
+
+    function renderKeyboard() {
+      keyboardEl.innerHTML = "";
+      const keyStatuses = getKeyStatuses();
+
+      KEYBOARD_ROWS.forEach((row, index) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = `kbd-row row-${index + 1}`;
+
+        row.forEach((key) => {
+          const btn = document.createElement("button");
+          btn.className = "key";
+          if (key === "ENTER" || key === "BACK") btn.classList.add("wide");
+          if (keyStatuses[key]) btn.classList.add(keyStatuses[key]);
+          btn.textContent = key === "BACK" ? "⌫" : key;
+          btn.addEventListener("click", () => handleKey(key));
+          rowEl.appendChild(btn);
+        });
+
+        keyboardEl.appendChild(rowEl);
+      });
+    }
+
+    function updateEndBox() {
+      if (!gameOver) return;
+      const won = solvedBoards.every(Boolean);
+      endTitleEl.textContent = won ? "Você venceu" : "Rodada encerrada";
+      endTextEl.textContent = mode === 1
+        ? `Palavra secreta: ${answers[0]}`
+        : `Palavras secretas: ${answers.join(", ")}`;
+    }
+
+    function render() {
+      renderBoards();
+      renderKeyboard();
+      updateEndBox();
+    }
+
+    function updateSolvedBoards(guess) {
+      answers.forEach((answer, index) => {
+        if (guess === answer) solvedBoards[index] = true;
+      });
+    }
+
+    function submitGuess() {
+      if (gameOver) return;
+
+      if (current.length !== WORD_LENGTH) {
+        shakeCurrentRow();
+        showMessage("Digite uma palavra com 5 letras.");
+        return;
+      }
+
+      if (!WORDS.includes(current)) {
+        shakeCurrentRow();
+        showMessage("Palavra não está na lista.");
+        return;
+      }
+
+      guesses.push(current);
+      updateSolvedBoards(current);
+
+      const allSolved = solvedBoards.every(Boolean);
+      if (allSolved) {
+        gameOver = true;
+        showMessage(mode === 1 ? "Boa! Você acertou." : `Boa! Você acertou as ${mode} palavras.`, true);
+      } else if (guesses.length >= getMaxRows()) {
+        gameOver = true;
+        showMessage(mode === 1 ? `Fim de jogo. A palavra era ${answers[0]}.` : `Fim de jogo. As palavras eram ${answers.join(", ")}.`, true);
+      } else {
+        showMessage("");
+      }
+
+      current = "";
+      cursorIndex = 0;
+      render();
+    }
+
+    function handleKey(key) {
+      if (gameOver && key !== "ENTER") return;
+
+      if (key === "ENTER") {
+        if (gameOver) resetGame();
+        else submitGuess();
+        return;
+      }
+
+      if (key === "BACK") {
+        if (!current.length) return;
+
+        if (cursorIndex < current.length && current[cursorIndex]) {
+          current = current.slice(0, cursorIndex) + current.slice(cursorIndex + 1);
+        } else {
+          const removeIndex = Math.max(0, Math.min(cursorIndex - 1, current.length - 1));
+          current = current.slice(0, removeIndex) + current.slice(removeIndex + 1);
+          cursorIndex = removeIndex;
+        }
+
+        if (cursorIndex > current.length) cursorIndex = current.length;
+        render();
+        return;
+      }
+
+      if (/^[A-Z]$/.test(key)) {
+        if (current.length < WORD_LENGTH) {
+          if (cursorIndex >= current.length) {
+            current = current + key;
+            cursorIndex = Math.min(current.length, WORD_LENGTH - 1);
+            if (current.length < WORD_LENGTH) cursorIndex = current.length;
+          } else {
+            current = current.slice(0, cursorIndex) + key + current.slice(cursorIndex + 1);
+            cursorIndex = Math.min(cursorIndex + 1, WORD_LENGTH - 1);
+            if (cursorIndex > current.length) cursorIndex = current.length;
+          }
+        } else {
+          current = current.slice(0, cursorIndex) + key + current.slice(cursorIndex + 1);
+          cursorIndex = Math.min(cursorIndex + 1, WORD_LENGTH - 1);
+        }
+
+        render();
+      }
+    }
+
+    function resetGame(nextMode = mode) {
+      mode = Number(nextMode);
+      answers = sampleAnswers(mode);
+      guesses = [];
+      current = "";
+      cursorIndex = 0;
+      solvedBoards = Array(mode).fill(false);
+      gameOver = false;
+      modeButtons.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.mode) === mode));
+      titleLabelEl.textContent = mode === 1 ? "TERMO" : mode === 2 ? "DUETO" : "QUARTETO";
+      render();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const key = e.key.toUpperCase();
+
+      if (key === "ENTER") {
+        e.preventDefault();
+        handleKey("ENTER");
+      } else if (key === "BACKSPACE") {
+        e.preventDefault();
+        handleKey("BACK");
+      } else if (/^[A-Z]$/.test(key)) {
+        e.preventDefault();
+        handleKey(key);
+      }
+    });
+
+    resetBtn.addEventListener("click", () => resetGame());
+    playAgainBtn.addEventListener("click", () => resetGame());
+    modeButtons.forEach((btn) => btn.addEventListener("click", () => resetGame(btn.dataset.mode)));
+
+    resetGame(1);
+  </script>
+</body>
+</html>
